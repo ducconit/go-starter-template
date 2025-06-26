@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# if devtool exists, run it
+if [ -f "bin/devtool" ]; then
+	./bin/devtool $*
+else
+	go run devtool/main.go $*
+fi

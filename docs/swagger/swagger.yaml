@@ -1,0 +1,47 @@
+basePath: /api/v1
+host: localhost:3000
+info:
+  contact: {}
+  description: API Gateway documentation
+  title: API Gateway Documentation
+  version: 1.0.0
+paths:
+  /config:
+    get:
+      consumes:
+      - application/json
+      description: Get config
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Get config successfully
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get config API
+      tags:
+      - System
+  /ping:
+    get:
+      consumes:
+      - application/json
+      description: Ping API
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Ping successfully
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Ping API
+      tags:
+      - System
+securityDefinitions:
+  BearerAuth:
+    description: 'Provide your Bearer token in the format: Bearer <token>'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

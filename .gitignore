@@ -1,0 +1,10 @@
+# IDE
+/.vscode
+/.DS_Store
+/.idea
+
+# Config/ Env
+.env
+.env.production
+.env.staging
+/config.yml

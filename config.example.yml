@@ -1,0 +1,44 @@
+app:
+  # Môi trường phát triển: development, staging, uat, testing, production,...
+  env: development
+  # URL của ứng dụng
+  url: http://localhost:3000
+
+api:
+  enable_swagger: true
+  host: localhost
+  port: 3000
+  allow_origins: ["http://localhost:5173"]
+
+db:
+  host: localhost
+  port: 5432
+  user: postgres
+  password: postgres
+  name: postgres
+  sslmode: disable
+
+jwt:
+  nonce_secret_key: nonce_secret_key
+  nonce_expire: 120
+  access_token_secret_key: access_token_secret_key
+  access_token_expire: 21600 # 6 giờ
+  refresh_token_expire: 604800 # 7 ngày
+  refresh_token_secret_key: refresh_token_secret_key
+
+storage:
+  # Type of storage to use: local, s3
+  type: local
+  
+  # Local storage configuration
+  local:
+    base_path: ./data/storage
+    base_url: http://localhost:3000/storage
+    
+  # S3 storage configuration
+  s3:
+    bucket: bucket
+    region: ap-southeast-1
+    access_key: access_key
+    secret_key: secret_key
+    # endpoint: "" # Leave empty for default endpoints
