@@ -3,6 +3,7 @@ app:
   env: development
   # URL của ứng dụng
   url: http://localhost:3000
+  enable_metrics: true
 
 api:
   enable_swagger: true

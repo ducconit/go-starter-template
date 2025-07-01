@@ -58,3 +58,32 @@ mocks:
 .PHONY: version
 version:
 	@app version
+
+.PHONY: monitor
+monitor:
+	docker compose up -d victoriametrics victorialogs vmagent vmauth grafana
+
+.PHONY: monitor-down
+monitor-down:
+	docker compose down victoriametrics victorialogs vmagent vmauth grafana
+
+.PHONY: services
+services:
+	docker compose up -d db redis
+
+.PHONY: services-down
+services-down:
+	docker compose down db redis
+
+.PHONY: run-server
+run-server:
+	docker compose up -d server
+
+.PHONY: stop-server
+stop-server:
+	docker compose down server
+
+.PHONY: restart-server
+restart-server:
+	make stop-server
+	docker compose up -d server --build

@@ -3,6 +3,7 @@ package api
 import (
 	v1 "app/internal/api/handler/v1"
 	"app/internal/config"
+	"app/internal/monitor"
 
 	swaggerDocs "app/docs/swagger"
 
@@ -13,6 +14,8 @@ import (
 
 // SetupRouter setup router
 func SetupRouter(router *gin.Engine) {
+	monitor.SetupRouter(router)
+
 	r := router.Group("/api")
 	{
 		// Cấu hình Swagger nếu được bật

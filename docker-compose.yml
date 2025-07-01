@@ -31,6 +31,120 @@ services:
     networks:
       - backend
 
+  server:
+    build: .
+    ports:
+      - "${API_PORT:-3000}:3000"
+    environment:
+      - API_HOST=0.0.0.0
+      - API_PORT=3000
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - DB_NAME=${DB_NAME:-postgres}
+    depends_on:
+      - db
+      - redis
+    networks:
+      - backend
+      - monitoring
+    env_file:
+      - .env
+    tty: true
+    volumes:
+      - ./config.yml:/app/config.yml
+      - ./storage/uploads:/app/storage/uploads
+      - ./storage/logs:/app/storage/logs
+    restart: unless-stopped
+
+  victoriametrics:
+    image: victoriametrics/victoria-metrics:latest
+    volumes:
+      - ./storage/docker/victoriametrics:/victoria-metrics-data
+    command:
+      - '--storageDataPath=/victoria-metrics-data'
+      - '--loggerLevel=${VM_LOG_LEVEL:-INFO}'
+      - '-retentionPeriod=${VM_METRICS_RETENTION:-60d}' # 1 month retention
+      - '-loggerOutput=stderr' # Log to stderr for Docker logs
+    networks:
+      - monitoring
+
+  vmagent:
+    image: victoriametrics/vmagent:latest
+    volumes:
+      - ./docker/vmagent.yml:/etc/prometheus/prometheus.yml:ro # Scrape config
+      - ./storage/docker/vmagent:/vmagentdata 
+    command:
+      - "--promscrape.config=/etc/prometheus/prometheus.yml"
+      - "--remoteWrite.url=http://victoriametrics:8428/api/v1/write"
+      - "--remoteWrite.tmpDataPath=/vmagentdata"
+      - "--loggerOutput=stderr"
+    depends_on:
+      - victoriametrics
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "${GRAFANA_PORT:-4000}:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_INSTALL_PLUGINS=victoriametrics-metrics-datasource,victoriametrics-logs-datasource
+      - GF_AUTH_ANONYMOUS_ENABLED=${GRAFANA_ANONYMOUS_ENABLED:-false}
+    volumes:
+      - ./docker/grafana/dashboards:/var/lib/grafana/dashboards
+      - ./docker/grafana/home-dashboard.yml:/etc/grafana/provisioning/dashboards/home.yml:ro
+      - ./docker/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+      - ./docker/grafana/grafana.ini:/etc/grafana/grafana.ini:ro
+      - ./storage/docker/grafana:/var/lib/grafana
+    depends_on:
+      - victoriametrics
+    networks:
+      - monitoring
+
+  vector:
+    image: timberio/vector:latest-alpine
+    volumes:
+      - ./docker/vector.yml:/etc/vector/vector.yml:ro # Vector configuration
+      - /var/run/docker.sock:/var/run/docker.sock:ro # Mount Docker socket for log collection
+    command: ["--config", "/etc/vector/vector.yml"]
+    networks:
+      - monitoring
+    depends_on:
+      - victorialogs
+      
+  vmauth:
+    image: victoriametrics/vmauth:latest
+    ports:
+      - "${VM_AUTH_PORT:-8427}:8427" # Central proxy endpoint for Grafana
+    volumes:
+      - ./docker/vmauth.yml:/etc/vmauth/auth.yml:ro # VMAuth configuration
+    command:
+      - "-auth.config=/etc/vmauth/auth.yml"
+      - "-loggerOutput=stderr"
+    networks:
+      - monitoring
+    depends_on:
+      - victoriametrics
+      - victorialogs
+    restart: unless-stopped
+
+
+  victorialogs:
+    image: victoriametrics/victoria-logs:latest
+    ports:
+      - "${VM_LOGS_PORT:-9428}:9428" # Log Ingestion and Query API
+    volumes:
+      - ./storage/docker/victorialogs:/victoria-logs-data
+    command:
+      - "-storageDataPath=/victoria-logs-data"
+      - "-retentionPeriod=${VM_LOGS_RETENTION:-30d}" # 7 days retention
+      - "-loggerOutput=stderr"
+    networks:
+      - monitoring
+
 networks:
   backend:
-    driver: bridge
+  monitoring:

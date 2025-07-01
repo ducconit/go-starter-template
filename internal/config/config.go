@@ -7,8 +7,8 @@ import (
 
 type Config struct {
 	ApiConfig *ApiConfig `mapstructure:"api"`
-
-	mu sync.RWMutex
+	AppConfig *AppConfig `mapstructure:"app"`
+	mu        sync.RWMutex
 }
 
 type ApiConfig struct {
@@ -17,6 +17,10 @@ type ApiConfig struct {
 	AllowOrigins     []string `mapstructure:"allow_origins"`
 	AllowCredentials bool     `mapstructure:"allow_credentials"`
 	EnableSwagger    bool     `mapstructure:"enable_swagger"`
+}
+
+type AppConfig struct {
+	EnableMetrics bool `mapstructure:"enable_metrics"`
 }
 
 var cfg Config
@@ -31,6 +35,16 @@ func Api() *ApiConfig {
 	return cfg.ApiConfig
 }
 
+func App() *AppConfig {
+	cfg.mu.RLock()
+	defer cfg.mu.RUnlock()
+	return cfg.AppConfig
+}
+
 func (c *ApiConfig) Address() string {
 	return c.Host + ":" + c.Port
+}
+
+func EnableMetrics() bool {
+	return App().EnableMetrics
 }

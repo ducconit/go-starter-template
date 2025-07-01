@@ -5,6 +5,7 @@ import (
 	"app/internal/api"
 	"app/internal/api/middleware"
 	appConfig "app/internal/config"
+	"app/internal/monitor"
 	"context"
 	"core/config"
 	"core/log"
@@ -39,6 +40,10 @@ var apiCmd = &cobra.Command{
 			config.Set("api.host", host)
 			config.Set("api.port", port)
 		}
+
+		// Bắt đầu thu thập metrics hệ thống mỗi 5 giây
+		monitor.Start("app", 5*time.Second)
+
 		// Set mode
 		// Set environment
 		isProduction := os.Getenv("APP_ENV") == "production"
@@ -72,6 +77,7 @@ var apiCmd = &cobra.Command{
 		router.Use(requestid.New())
 		router.Use(middleware.Security())
 		router.Use(middleware.CORS())
+		router.Use(monitor.HTTPMetricsMiddleware())
 
 		database, err := db.Make()
 		if err != nil {
@@ -80,6 +86,9 @@ var apiCmd = &cobra.Command{
 
 		// Setup routes
 		api.SetupRouter(router)
+
+		// Ghi log thông tin metrics
+		logger.Info("Metrics endpoint available at /metrics")
 
 		// Start server
 		srv := &http.Server{
