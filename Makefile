@@ -82,3 +82,8 @@ run-server:
 .PHONY: stop-server
 stop-server:
 	docker compose down server
+
+.PHONY: restart-server
+restart-server:
+	make stop-server
+	docker compose up -d server --build
