@@ -1,0 +1,37 @@
+# vmauth-auth.yml
+# This configuration defines how VMAuth routes requests to VictoriaMetrics and VictoriaLogs.
+# It acts as a single entry point for Grafana and other clients.
+unauthorized_user:
+  # This section defines rules for requests without specific authentication.
+  # For production, you would define specific users and their access rules.
+  url_map:
+    # Route Prometheus query API requests to VictoriaMetrics
+    - src_paths:
+        - "/api/v1/query"
+        - "/api/v1/query_range"
+        - "/api/v1/series"
+        - "/api/v1/labels"
+        - "/api/v1/label/.*/values"
+        - "/api/v1/status/tsdb"
+        - "/api/v1/targets"
+        - "/federate"
+        - "/vmui" # Route VMUI requests to VictoriaMetrics
+      url_prefix: "http://victoriametrics:8428/"
+      # Drop the source path prefix parts if needed, but for direct proxying, often not required.
+      # drop_src_path_prefix_parts: 0
+
+    # Route VictoriaLogs ingestion and query API requests to VictoriaLogs
+    - src_paths:
+        - "/insert/jsonline" # Vector's log ingestion endpoint
+        - "/select/logsql/query" # VictoriaLogs query API
+        - "/select/logsql/query_range"
+        - "/internal/force_flush" # For immediate log querying
+        - "/internal/force_merge" # For log compaction
+      url_prefix: "http://victorialogs:9428/"
+      # drop_src_path_prefix_parts: 0
+
+    # Route Prometheus remote write requests (e.g., from vmagent if it were external)
+    # In this setup, vmagent writes directly to victoriametrics, but this shows how vmauth could handle it.
+    - src_paths:
+        - "/api/v1/write"
+      url_prefix: "http://victoriametrics:8428/"

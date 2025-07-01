@@ -8,6 +8,7 @@ import (
 	"context"
 	"core/config"
 	"core/log"
+	"core/monitor/metrics"
 	"core/util"
 	"fmt"
 	"net/http"
@@ -17,6 +18,7 @@ import (
 
 	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 )
@@ -39,6 +41,11 @@ var apiCmd = &cobra.Command{
 			config.Set("api.host", host)
 			config.Set("api.port", port)
 		}
+		// Khởi tạo metrics collector
+		metricsCollector := metrics.NewCollector("app")
+		// Bắt đầu thu thập metrics hệ thống mỗi 5 giây
+		metricsCollector.StartCollecting(5 * time.Second)
+
 		// Set mode
 		// Set environment
 		isProduction := os.Getenv("APP_ENV") == "production"
@@ -72,6 +79,10 @@ var apiCmd = &cobra.Command{
 		router.Use(requestid.New())
 		router.Use(middleware.Security())
 		router.Use(middleware.CORS())
+		router.Use(metricsCollector.HTTPMetricsMiddleware())
+
+		// Thêm endpoint metrics cho Prometheus
+		router.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 		database, err := db.Make()
 		if err != nil {
@@ -80,6 +91,9 @@ var apiCmd = &cobra.Command{
 
 		// Setup routes
 		api.SetupRouter(router)
+
+		// Ghi log thông tin metrics
+		logger.Info("Metrics endpoint available at /metrics")
 
 		// Start server
 		srv := &http.Server{

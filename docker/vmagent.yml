@@ -1,0 +1,20 @@
+# vmagent-prometheus.yml
+global:
+  scrape_interval: 15s # Default scrape interval for all jobs
+
+scrape_configs:
+  # Scrape node expoter
+  - job_name: 'node_exporter'
+    static_configs:
+      - targets: ['node_exporter:9100']
+
+  # Scrape metrics from the Go test server
+  - job_name: 'server'
+    # Use the service name defined in docker-compose.yml
+    static_configs:
+      - targets: ['server:3000'] # Target the Go server's metrics endpoint
+
+  # Scrape VMAgent's own metrics
+  - job_name: 'vmagent'
+    static_configs:
+      - targets: ['vmagent:8429'] # Target VMAgent's own metrics endpoint
