@@ -14,23 +14,23 @@ import (
 // Collector chứa tất cả các metrics của hệ thống
 type Collector struct {
 	// System metrics
-	CPUUtilization    *prometheus.GaugeVec
-	MemoryUsage       *prometheus.GaugeVec
-	DiskUsage         *prometheus.GaugeVec
-	GoRoutines        prometheus.Gauge
-	GoMemoryAlloc     prometheus.Gauge
-	GoTotalAlloc      prometheus.Gauge
-	GoSys             prometheus.Gauge
-	GoNumGC           prometheus.Counter
+	CPUUtilization *prometheus.GaugeVec
+	MemoryUsage    *prometheus.GaugeVec
+	DiskUsage      *prometheus.GaugeVec
+	GoRoutines     prometheus.Gauge
+	GoMemoryAlloc  prometheus.Gauge
+	GoTotalAlloc   prometheus.Gauge
+	GoSys          prometheus.Gauge
+	GoNumGC        prometheus.Counter
 
 	// Application metrics
 	HTTPRequestsTotal *prometheus.CounterVec
-	HTTPDuration     *prometheus.HistogramVec
-	DBConnections    *prometheus.GaugeVec
-	DBQueriesTotal   *prometheus.CounterVec
+	HTTPDuration      *prometheus.HistogramVec
+	DBConnections     *prometheus.GaugeVec
+	DBQueriesTotal    *prometheus.CounterVec
 
 	// Dynamic metrics registry
-	customMetrics map[string]interface{}
+	customMetrics map[string]any
 }
 
 // NewCollector khởi tạo một collector mới
@@ -111,7 +111,7 @@ func NewCollector(namespace string) *Collector {
 			Help:      "Total number of database queries",
 		}, []string{"db_name", "operation", "table"}),
 
-		customMetrics: make(map[string]interface{}),
+		customMetrics: make(map[string]any),
 	}
 }
 
@@ -158,12 +158,12 @@ func (c *Collector) collectSystemMetrics() {
 }
 
 // RegisterCustomMetric đăng ký một custom metric
-func (c *Collector) RegisterCustomMetric(name string, metric interface{}) {
+func (c *Collector) RegisterCustomMetric(name string, metric any) {
 	c.customMetrics[name] = metric
 }
 
 // GetCustomMetric lấy một custom metric đã đăng ký
-func (c *Collector) GetCustomMetric(name string) (interface{}, bool) {
+func (c *Collector) GetCustomMetric(name string) (any, bool) {
 	metric, exists := c.customMetrics[name]
 	return metric, exists
 }
