@@ -25,10 +25,6 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o server ./main.go
 # Stage 2: Create a minimal image
 FROM alpine:latest
 
-RUN bash <(wget -qO- https://raw.githubusercontent.com/ducconit/scripts/main/node_exporter.sh)
-RUN service node_exporter start
-RUN systemctl enable node_exporter
-
 WORKDIR /app
 
 # Copy the compiled binary from the builder stage
@@ -43,7 +39,6 @@ RUN chmod o+x run.sh
 
 # Expose the port the application listens on
 EXPOSE ${API_PORT:-3000}
-EXPOSE ${NODE_EXPORTER_PORT:-9100}
 
 # Command to run the executable
 CMD ["./run.sh"]
