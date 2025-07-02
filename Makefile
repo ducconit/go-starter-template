@@ -61,11 +61,11 @@ version:
 
 .PHONY: monitor
 monitor:
-	docker compose up -d victoriametrics victorialogs vmagent vmauth grafana
+	docker compose up -d victoriametrics victorialogs vmagent vmauth grafana vector
 
 .PHONY: monitor-down
 monitor-down:
-	docker compose down victoriametrics victorialogs vmagent vmauth grafana
+	docker compose down victoriametrics victorialogs vmagent vmauth grafana vector
 
 .PHONY: services
 services:
