@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"runtime"
 	"time"
 
 	"app/internal/cmd"
@@ -19,6 +20,8 @@ import (
 // @name Authorization
 // @description     Provide your Bearer token in the format: Bearer <token>
 func main() {
+	runtime.GOMAXPROCS(runtime.NumCPU())
+
 	// always use UTC time
 	time.Local = time.UTC
 
